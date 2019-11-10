@@ -1,0 +1,15 @@
+version: 0.0.0
+blacklisted:
+  - "Playername"
+addon_enabled: ["economyapi"]
+#addons_enabled
+#PREVENT FUTURE
+cooldown_message: 3
+#cooldown is in seconds,
+mini_length_message: 4
+#The minimum length of the message to count as a real message and to give xp
+default_max_xp_per_level: 550
+#If a player reach more than this, it will add a level to the player
+max_xp_per_message: 10
+#Maximum xp winned when sending a message
+

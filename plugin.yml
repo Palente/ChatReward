@@ -1,0 +1,26 @@
+name: ChatReward
+main: Palente\ChatReward\ChatReward
+api: [3.0.0]
+author: Palente
+version: 0.0.2
+description: "System of reward for chat"
+website: https://github.com/Palente
+softdepend:
+  - EconomyAPI
+commands:
+  chatreward:
+    usage: "/chatreward <info> [player]"
+    description: "ChatReward command"
+    aliases:
+      - cr
+    permission: chatreward.command.chatreward
+permissions:
+  chatreward.*:
+    description: ""
+    children:
+      chatreward.command.*:
+        description: ""
+        children:
+          chatreward.command.chatreward:
+            description: ""
+            default: true
