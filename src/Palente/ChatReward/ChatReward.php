@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <?php
 /*
  *  ChatReward is a plugin working under the software pmmp.
@@ -206,6 +207,7 @@ class ChatReward extends PluginBase
             }
         }
     }
+    
     private function reachedNextLevel(Player $player){
         $level = $this->getLevel($player)+1; #He reached a level so he reached the current level + 1
         if(isset($this->config->get("level_rewards")[$level])){

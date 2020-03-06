@@ -54,6 +54,7 @@ class EventListener implements Listener
         if(isset($this->lastMessage[$name]) && (time() - $this->lastMessage[$name]) < $this->plugin->cooldownChat) return;
         $this->lastMessage[$name] = time();
         $points = $this->plugin->addPoints($player);
+        // debug
         $player->sendMessage("Plus ".$points);
     }
 }
