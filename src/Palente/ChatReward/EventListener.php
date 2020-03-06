@@ -1,8 +1,22 @@
 <?php
+/*
+ *  ChatReward is a plugin working under the software pmmp.
+ *  Copyright (C) 2019-2020  Palente
 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
 
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 namespace Palente\ChatReward;
-
 
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerChatEvent;
@@ -37,10 +51,9 @@ class EventListener implements Listener
         $message = $event->getMessage();
         if($event->isCancelled()) return;
         if(strlen($message) < $this->plugin->minlenmess) return;
-        if(isset($this->lastMessage[$name]) && (time() - $this->lastMessage) < $this->plugin->cooldownChat) return;
+        if(isset($this->lastMessage[$name]) && (time() - $this->lastMessage[$name]) < $this->plugin->cooldownChat) return;
         $this->lastMessage[$name] = time();
-        $this->plugin->addPoints($player, mt_rand(0, $this->plugin->ma_xp_message));
-
-
+        $points = $this->plugin->addPoints($player);
+        $player->sendMessage("Plus ".$points);
     }
 }

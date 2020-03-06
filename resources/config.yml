@@ -1,15 +1,31 @@
 version: 0.0.0
 blacklisted:
   - "Playername"
-addon_enabled: ["economyapi"]
-#addons_enabled
-#PREVENT FUTURE
+addons_enabled: []
+#addons_enabled: ["economyapi", "pureperms"]
+#economyapi - Plugin for economy: https://poggit.pmmp.io/p/EconomyAPI
+#pureperms - Plugin for rank: https://poggit.pmmp.io/p/PurePerms
+#Only Add them if you have these plugins!
+
 cooldown_message: 3
-#cooldown is in seconds,
+#The time to wait before winning again xp by sending a message, (in seconds)
 mini_length_message: 4
 #The minimum length of the message to count as a real message and to give xp
-default_max_xp_per_level: 550
-#If a player reach more than this, it will add a level to the player
 max_xp_per_message: 10
 #Maximum xp winned when sending a message
+announce_level-up : true
+announce_message: "§1[ChatReward]§f {playername} reached the level {level}"
+#Please see tags at the end of this config
+level_xp:
+  0: 100
+  1: 200
+  classic: "100 * {level}" #only the tags level work here. It's to do Maths.
+level_rewards:
+  1:
+    - money: 500
+    - message: "By reaching level 1 you received 500dollars"
 
+
+#TAGS
+# {level} represent the level of the player it's an integer.
+# {playername} represent the name of the player.

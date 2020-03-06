@@ -2,11 +2,12 @@ name: ChatReward
 main: Palente\ChatReward\ChatReward
 api: [3.0.0]
 author: Palente
-version: 0.0.2
+version: 0.1.0
 description: "System of reward for chat"
 website: https://github.com/Palente
 softdepend:
   - EconomyAPI
+  - PurePerms
 commands:
   chatreward:
     usage: "/chatreward <info> [player]"
