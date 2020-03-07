@@ -2,7 +2,7 @@ name: ChatReward
 main: Palente\ChatReward\ChatReward
 api: [3.0.0]
 author: Palente
-version: 0.1.0
+version: 0.2.0
 description: "System of reward for chat"
 website: https://github.com/Palente
 softdepend:
@@ -12,8 +12,7 @@ commands:
   chatreward:
     usage: "/chatreward <info> [player]"
     description: "ChatReward command"
-    aliases:
-      - cr
+    aliases: ["cr"]
     permission: chatreward.command.chatreward
 permissions:
   chatreward.*:

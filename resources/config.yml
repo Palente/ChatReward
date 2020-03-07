@@ -1,5 +1,4 @@
-<<<<<<< HEAD
-version: 0.1.0
+version: 0.2.0
 blacklisted:
   - "Playername"
 addons_enabled: []
@@ -23,11 +22,17 @@ level_xp:
   classic: "100 * {level}" #only the tags level work here. It's to do Maths.
 level_rewards:
   1:
-    - money: 500
-    - message: "By reaching level 1 you received 500dollars"
+    money: 500
+    message: "By reaching level 1 you received 500dollars"
+  2:
+    money: 1000
+    message: "§a[ChatReward]§f {playername}, by reaching the level 2 you earned 1000 $ and you got the rank owner"
+    #rank: "owner" ...
+  classic:
+    money: 500
+    message: ""
 
 
 #TAGS
 # {level} represent the level of the player it's an integer.
 # {playername} represent the name of the player.
-=======

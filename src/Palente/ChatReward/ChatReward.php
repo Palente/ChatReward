@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 <?php
 /*
  *  ChatReward is a plugin working under the software pmmp.
@@ -69,7 +68,7 @@ class ChatReward extends PluginBase
             else $this->getLogger()->error("You have enabled the usage of the plugin EconomyAPI but the plugin is not found.");
         }
         if(in_array("pureperms",$addons)){
-            if($this->getServer()->getPluginManager()->getPlugin("PurePerms")) $this->purepermsApi = $this->getServer()->getPluginManager()->getPlugin("EconomyAPI");
+            if($this->getServer()->getPluginManager()->getPlugin("PurePerms")) $this->purepermsApi = $this->getServer()->getPluginManager()->getPlugin("PurePerms");
             else $this->getLogger()->error("You have enabled the usage of the plugin PurePerms but the plugin is not found.");
         }
 
@@ -116,7 +115,7 @@ class ChatReward extends PluginBase
         $this->config->save(); $this->config->reload();
     }
     public function initData(string $name) {
-        $name= strtolower($name);
+        $name = strtolower($name);
         $this->configPlayers->set($name, ["level"=>0, "points"=>0]);
         $this->configPlayers->save();
         $this->configPlayers->reload();
@@ -136,12 +135,12 @@ class ChatReward extends PluginBase
     }
     public function getPoints(Player $player) : int{
         $name = strtolower($player->getName());
-        if(!$this->existData($name)) return 0;
         return $this->getData($name)["points"];
     }
     public function addPoints(Player $player) :int{
         $points = mt_rand(1, $this->max_xp_message);
         if(!$this->checkReachedNextLevel($player, $points)) $this->setPoints($player, $this->getPoints($player)+$points);
+        else $this->reachedNextLevel($player);
         return $points;
     }
     private function setPoints(Player $player, int $points){
@@ -192,7 +191,7 @@ class ChatReward extends PluginBase
         if(isset($this->config->get("level_xp")[$level])){
             $xpToReach = $this->thisPluginIsAMathPlugin($level, $this->config->get("level_xp")[$level]);
             if($xpToReach == 0) return true;
-            if(($this->getPoints($player)+$xp) >= $xpToReach)return true;
+            if(($this->getPoints($player)+$xp) >= $xpToReach) return true;
             return false;
         }else{
             if(isset($this->config->get("level_xp")["classic"])){
@@ -248,12 +247,11 @@ class ChatReward extends PluginBase
                     }
                 }
             }
+            if($this->announceEnabled && $this->announceMessage != "")
+                $this->getServer()->broadcastMessage($this->replaceTags($this->announceMessage, $player));
             if(isset($rewards["message"]) && $rewards["message"] !=""){
                 $player->sendMessage($this->replaceTags($rewards["message"], $player));
             }
-            if($this->announceEnabled && $this->announceMessage != "")
-                $this->getServer()->broadcastMessage($this->replaceTags($this->announceMessage, $player));
-
         }else{
             if(isset($this->config->get("level_rewards")["classic"])){
                 $rewards = $this->config->get("level_rewards")["classic"];
@@ -312,7 +310,8 @@ class ChatReward extends PluginBase
         //https://stackoverflow.com/questions/18880772/calculate-math-expression-from-a-string-using-eval
         //I will add some more function like ln(4) and e^4
         $calcul = str_replace("{level}", $level, $calcul);
-        if(preg_match('/(\d+)(?:\s*)([\+\-\*\/\^])(?:\s*)(\d+)/', $calcul, $matches) !== FALSE){
+        if(!preg_match('/(\d+)(?:\s*)([\+\-\*\/\^])(?:\s*)(\d+)/', $calcul, $matches)){
+            if(!isset($matches[2]) OR !isset($matches[3])) return intval($calcul);
             $operator = $matches[2];
             $weDoMaths = 0;
             switch($operator){
@@ -337,7 +336,7 @@ class ChatReward extends PluginBase
     }
     private function replaceTags(string $messageWithTags, Player $player) :string{
         $message = str_replace("{playername}", $player->getName(), $messageWithTags);
-        $message = str_replace("{level}", $this->getLevel($player)+1, $messageWithTags);
+        $message = str_replace("{level}", $this->getLevel($player)+1, $message);
 
         return $message;
     }

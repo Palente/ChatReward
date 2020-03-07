@@ -39,7 +39,7 @@ class EventListener implements Listener
 
     public function onJoin(PlayerJoinEvent $event){
         $player = $event->getPlayer();
-        if($this->plugin->existData($player->getName())){
+        if(!$this->plugin->existData($player->getName())){
             $this->plugin->initData($player->getName());
         }
     }

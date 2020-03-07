@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 <?php
 /*
  *  ChatReward is a plugin working under the software pmmp.
