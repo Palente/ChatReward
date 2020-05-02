@@ -30,16 +30,15 @@ class ChatReward extends PluginBase
     private $config;
     /** @var Config $configPlayers Configuration of players */
     private $configPlayers;
-    /** @var string The actual version of the config*/
-    const VERSION_CONFIG = "0.0.0";
     /** @var string $prefix the Prefix of the plugin */
-    public $prefix = "[ChatReward]";
+    public $prefix = TextFormat::DARK_GRAY."[".TextFormat::BLUE."Chat".TextFormat::GOLD."Reward".TextFormat::DARK_GRAY."] ".TextFormat::RESET;
     /** @var int $cooldownChat Cooldown in seconds */
     public $cooldownChat = 3;
     /** @var int $minlenmess Minimum of lenth for a message to be count */
     public $minlenmess = 4;
     /** * @var int $ma_xp_message */
     public $max_xp_message= 10;
+    private $last_message_check;
     private $announceEnabled;
     private $announceMessage;
     private $economyApi = null;
@@ -60,7 +59,8 @@ class ChatReward extends PluginBase
         $this->max_xp_message = $this->config->get("max_xp_per_message",10);
         $this->configPlayers = new Config($this->getDataFolder()."players.json", Config::JSON);
         $this->announceEnabled = $this->config->get("announce_level-up", true);
-        $this->announceMessage = $this->config->get("announce_message", "§1[ChatReward]§f {playername} reached the level {level}");
+        $this->announceMessage = $this->config->get("announce_message", "§8[§9Chat§6Reward§8]§f {playername} reached the level {level}");
+        $this->last_message_check = $this->config->get("check_same_message", true);
         //ADDON Code
         $addons = $this->config->get("addons_enabled", []);
         if(in_array("economyapi",$addons)){
@@ -71,14 +71,17 @@ class ChatReward extends PluginBase
             if($this->getServer()->getPluginManager()->getPlugin("PurePerms")) $this->purepermsApi = $this->getServer()->getPluginManager()->getPlugin("PurePerms");
             else $this->getLogger()->error("You have enabled the usage of the plugin PurePerms but the plugin is not found.");
         }
-
-        if(!is_null($this->economyApi) && !is_null($this->purepermsApi)) $this->getLogger()->notice("The support of EconomyAPI and PurePerms is enabled!");
+        if($this->economyApi !== null && $this->purepermsApi !== null) $this->getLogger()->notice("The support of EconomyAPI and PurePerms is enabled!");
     }
 
     /*
-     * INTERNAL FUNCTION
+     * INTERNAL FUNCTIONS
      */
-    public function getBlacklisteds() : ?array{
+    /**
+     * return list of Blacklisted
+     * @return array|null
+     */
+    public function getBlacklisted() : ?array{
         return $this->config->get("blacklisted", null);
     }
 
@@ -88,7 +91,7 @@ class ChatReward extends PluginBase
      */
     public function isBlacklisted(string $name):bool{
         $name = strtolower($name);
-        if(in_array($name, $this->config->get("blacklisted", [])))return true;
+        if(in_array($name, $this->getBlacklisted()))return true;
         return false;
     }
 
@@ -97,10 +100,11 @@ class ChatReward extends PluginBase
      */
     public function addBlacklist(Player $player){
         $name = strtolower($player->getName());
-        $blacklisted =  $this->config->get("blacklisted");
+        $blacklisted =  $this->getBlacklisted();
         $blacklisted[] = $name;
         $this->config->set("blacklisted", $blacklisted);
-        $this->config->save(); $this->config->reload();
+        $this->config->save();
+        $this->config->reload();
     }
 
     /**
@@ -108,18 +112,29 @@ class ChatReward extends PluginBase
      */
     public function removeBlacklist(string $name){
         $name = strtolower($name);
-        $blacklisted =  $this->config->get("blacklisted");
-        //WTF did i do before?
+        $blacklisted =  $this->getBlacklisted();
         $blacklisted = array_merge(array_diff($blacklisted, array($name)));
         $this->config->set("blacklisted", $blacklisted);
-        $this->config->save(); $this->config->reload();
+        $this->config->save();
+        $this->config->reload();
     }
+
+    /**
+     * Initialize data of Player.
+     * @param string $name
+     */
     public function initData(string $name) {
         $name = strtolower($name);
         $this->configPlayers->set($name, ["level"=>0, "points"=>0]);
         $this->configPlayers->save();
         $this->configPlayers->reload();
     }
+
+    /**
+     * Check if a Player is already registered.
+     * @param string $name
+     * @return bool
+     */
     public function existData(string $name) : bool{
         return $this->configPlayers->exists($name, true);
     }
@@ -137,12 +152,24 @@ class ChatReward extends PluginBase
         $name = strtolower($player->getName());
         return $this->getData($name)["points"];
     }
+
+    /**
+     * Add Points to Player, if the player is blacklisted, the function will return 0
+     * @param Player $player
+     * @return int
+     */
     public function addPoints(Player $player) :int{
         $points = mt_rand(1, $this->max_xp_message);
-        if(!$this->checkReachedNextLevel($player, $points)) $this->setPoints($player, $this->getPoints($player)+$points);
+        if ($this->isBlacklisted($player->getName())) return 0;
+        if(!$this->hasReachedNextLevel($player, $points)) $this->setPoints($player, $this->getPoints($player)+$points);
         else $this->reachedNextLevel($player);
         return $points;
     }
+
+    /**
+     * @param Player $player
+     * @param int $points
+     */
     private function setPoints(Player $player, int $points){
         $name = strtolower($player->getName());
         if(!$this->existData($name)) $this->initData($name);
@@ -186,7 +213,7 @@ class ChatReward extends PluginBase
      * @param int $xp
      * @return bool
      */
-    private function checkReachedNextLevel(Player $player, int $xp) : bool{
+    private function hasReachedNextLevel(Player $player, int $xp) : bool{
         $level = $this->getLevel($player);
         if(isset($this->config->get("level_xp")[$level])){
             $xpToReach = $this->thisPluginIsAMathPlugin($level, $this->config->get("level_xp")[$level]);
@@ -206,112 +233,55 @@ class ChatReward extends PluginBase
             }
         }
     }
-    
+
     private function reachedNextLevel(Player $player){
         $level = $this->getLevel($player)+1; #He reached a level so he reached the current level + 1
-        if(isset($this->config->get("level_rewards")[$level])){
-            $rewards = $this->config->get("level_rewards")[$level];
-            if(isset($rewards["money"])){
-                //give him money!
-                $amount = $this->thisPluginIsAMathPlugin($level, $rewards["money"]);
-                if ($amount != 0){
-                    //We can give him money....
-                    if(is_null($this->economyApi)){
-                        //WHY DID YOU FILLED MONEY?
-                        $this->getLogger()->warning("...");
-                        $player->sendMessage(TextFormat::DARK_RED.$this->prefix."An error has occurred. Please contact an Administrator with this error: ".TextFormat::BOLD."ERR_PLUGIN_ECONOMY");
-                        #i don't know if we let him have his other reward.
-                    }else{
-                        //Good Boy!
-                        $this->economyApi->addMoney($player, $amount);
-                    }
-                }
-                //else #why giving money if it's equal to 0? Just let it empty!
-            }
-            if(isset($rewards["rank"]) && $rewards["rank"] != ""){
-                //give him a rank!
-                if(is_null($this->purepermsApi)){
-                    //WHY DID YOU FILLED rank?
-                    $this->getLogger()->warning("...");
-                    $player->sendMessage(TextFormat::DARK_RED.$this->prefix."An error has occurred. Please contact an Administrator with this error: ".TextFormat::BOLD."ERR_PLUGIN_RANK");
-                    #i don't know if we let him have his other reward.
-                }else{
-                    $groupName = $rewards["rank"];
-                    $group = $this->purepermsApi->getGroup($groupName);
-                    if($group instanceof \_64FF00\PurePerms\PPGroup){
-                        $this->purepermsApi->setGroup($player, $group);
-                    }else{
-                        //The rank don't exist!
-                        $this->getLogger()->warning("An error has occurred when trying to give a reward to".$player->getName().". The rank '".$groupName."' don't exist");
-                        $player->sendMessage(TextFormat::DARK_RED.$this->prefix."An error has occurred. Please contact an Administrator with this error: ".TextFormat::BOLD."ERR_RANK_DONT_EXIST");
-                    }
-                }
-            }
-            if($this->announceEnabled && $this->announceMessage != "")
-                $this->getServer()->broadcastMessage($this->replaceTags($this->announceMessage, $player));
-            if(isset($rewards["message"]) && $rewards["message"] !=""){
-                $player->sendMessage($this->replaceTags($rewards["message"], $player));
-            }
-        }else{
-            if(isset($this->config->get("level_rewards")["classic"])){
-                $rewards = $this->config->get("level_rewards")["classic"];
-                if(isset($rewards["money"])){
-                    //give him money!
-                    $amount = $this->thisPluginIsAMathPlugin($level, $rewards["money"]);
-                    if ($amount != 0){
-                        //We can give him money....
-                        if(is_null($this->economyApi)){
-                            //WHY DID YOU FILLED MONEY?
-                            $this->getLogger()->warning("...");
-                            $player->sendMessage(TextFormat::DARK_RED.$this->prefix."An error has occurred. Please contact an Administrator with this error: ".TextFormat::BOLD."ERR_PLUGIN_ECONOMY");
-                            #i don't know if we let him have his other reward.
-                        }else{
-                            //Good Boy!
-                            $this->economyApi->addMoney($player, $amount);
-                        }
-                    }
-                    //else #why giving money if it's equal to 0? Just let it empty!
-                }
-                if(isset($rewards["rank"]) && $rewards["rank"] != ""){
-                    //give him a rank!
-                    if(is_null($this->purepermsApi)){
-                        //WHY DID YOU FILLED rank?
-                        $this->getLogger()->warning("...");
-                        $player->sendMessage(TextFormat::DARK_RED.$this->prefix."An error has occurred. Please contact an Administrator with this error:".TextFormat::BOLD."ERR_PLUGIN_RANK");
-                        #i don't know if we let him have his other reward.
-                    }else{
-                        $groupName = $rewards["rank"];
-                        $group = $this->purepermsApi->getGroup($groupName);
-                        if($group instanceof \_64FF00\PurePerms\PPGroup){
-                            $this->purepermsApi->setGroup($player, $group);
-                        }else{
-                            //The rank don't exist!
-                            $this->getLogger()->warning("An error has occurred when trying to give a reward to".$player->getName().". The rank '".$groupName."' don't exist");
-                            $player->sendMessage(TextFormat::DARK_RED.$this->prefix."An error has occurred. Please contact an Administrator with this error: ".TextFormat::BOLD."ERR_RANK_DONT_EXIST");
-                        }
-                    }
-                }
-                if(isset($rewards["message"]) && $rewards["message"] !=""){
-                    $player->sendMessage($this->replaceTags($rewards["message"], $player));
-                }
-                if($this->announceEnabled && $this->announceMessage != "")
-                    $this->getServer()->broadcastMessage($this->replaceTags($this->announceMessage, $player));
-            }else{
-                //i did my best to make a good configuration, and you deleted the most important element?
-                $this->getLogger()->critical("An error has occured. The configuration 'config.yml' is badly configurated! Please reset your configuration!");
-                $player->sendMessage(TextFormat::DARK_RED.$this->prefix."An error has occurred. Please contact an Administrator with this error: ".TextFormat::BOLD."ERR_CONFIG_CLASSIC");
-
+        if(isset($this->config->get("level_rewards")[$level])) $rewards = $this->config->get("level_rewards")[$level];
+        else $rewards = $this->config->get("level_rewards")["classic"];
+        if(isset($rewards["money"])){
+            $amount = $this->thisPluginIsAMathPlugin($level, $rewards["money"]);
+            if ($amount != 0){
+                if(is_null($this->economyApi)){
+                    $this->getLogger()->error("An error has occured: ERR_PLUGIN_ECONOMY");
+                    $player->sendMessage(TextFormat::DARK_RED.$this->prefix."An error has occurred. Please contact an Administrator with this error: ".TextFormat::BOLD."ERR_PLUGIN_ECONOMY");
+                } else $this->economyApi->addMoney($player, $amount);
             }
         }
+        if(isset($rewards["rank"]) && $rewards["rank"] != ""){
+            if(is_null($this->purepermsApi)){
+                $this->getLogger()->error("An error has occured: ERR_PLUGIN_RANK");
+                $player->sendMessage(TextFormat::DARK_RED.$this->prefix."An error has occurred. Please contact an Administrator with this error: ".TextFormat::BOLD."ERR_PLUGIN_RANK");
+            }else{
+                $groupName = $rewards["rank"];
+                $group = $this->purepermsApi->getGroup($groupName);
+                if($group instanceof \_64FF00\PurePerms\PPGroup){
+                    $this->purepermsApi->setGroup($player, $group);
+                }else{
+                    //The rank don't exist!
+                    $this->getLogger()->warning("An error has occurred when trying to give a reward to".$player->getName().". The rank '".$groupName."' don't exist");
+                    $player->sendMessage(TextFormat::DARK_RED.$this->prefix."An error has occurred. Please contact an Administrator with this error: ".TextFormat::BOLD."ERR_RANK_DONT_EXIST");
+                }
+            }
+        }
+        if($this->announceEnabled && $this->announceMessage != "")
+            $this->getServer()->broadcastMessage($this->replaceTags($this->announceMessage, $player));
+        if(isset($rewards["message"]) && $rewards["message"] !="")
+            $player->sendMessage($this->replaceTags($rewards["message"], $player));
         $this->addLevel($player);
     }
 
-    private function thisPluginIsAMathPlugin(int $level, string $calcul) : int{
+    /**
+     * @param int $level
+     * @param string $calculation
+     * @return int
+     */
+    private function thisPluginIsAMathPlugin(int $level, string $calculation) : int{
         //https://stackoverflow.com/questions/18880772/calculate-math-expression-from-a-string-using-eval
-        //I will add some more function like ln(4) and e^4
-        $calcul = str_replace("{level}", $level, $calcul);
-        if(!preg_match('/(\d+)(?:\s*)([\+\-\*\/\^])(?:\s*)(\d+)/', $calcul, $matches)){
-            if(!isset($matches[2]) OR !isset($matches[3])) return intval($calcul);
+        //I will add some more function like ln() and e^4
+        $calculation = str_replace("{level}", $level, $calculation);
+        if(preg_match('/(\d+)(?:\s*)([\+\-\*\/\^])(?:\s*)(\d+)/', $calculation, $matches)){
+            if(!isset($matches[2], $matches[3])) return intval($calculation);
+            var_dump($matches);
             $operator = $matches[2];
             $weDoMaths = 0;
             switch($operator){
@@ -332,12 +302,18 @@ class ChatReward extends PluginBase
                     break;
             }
             return $weDoMaths;
-        }else return intval($calcul);
+        }else return intval($calculation);
     }
     private function replaceTags(string $messageWithTags, Player $player) :string{
         $message = str_replace("{playername}", $player->getName(), $messageWithTags);
         $message = str_replace("{level}", $this->getLevel($player)+1, $message);
-
         return $message;
+    }
+    /**
+     * @return bool
+     */
+    public function isCheckingLastMessage() : bool
+    {
+        return $this->last_message_check;
     }
 }

@@ -2,8 +2,8 @@ name: ChatReward
 main: Palente\ChatReward\ChatReward
 api: [3.0.0]
 author: Palente
-version: 0.2.0
-description: "System of reward for chat"
+version: 1.0.0
+description: "Get rewarded by talking!"
 website: https://github.com/Palente
 softdepend:
   - EconomyAPI

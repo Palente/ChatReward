@@ -39,22 +39,19 @@ class EventListener implements Listener
 
     public function onJoin(PlayerJoinEvent $event){
         $player = $event->getPlayer();
-        if(!$this->plugin->existData($player->getName())){
-            $this->plugin->initData($player->getName());
-        }
+        if(!$this->plugin->existData($player->getName())) $this->plugin->initData($player->getName());
     }
 
     public function onChat(PlayerChatEvent $event){
         if($event->isCancelled()) return;
         $player = $event->getPlayer();
         $name = strtolower($player->getName());
-        $message = $event->getMessage();
+        $message = strtolower($event->getMessage());
         if($event->isCancelled()) return;
         if(strlen($message) < $this->plugin->minlenmess) return;
-        if(isset($this->lastMessage[$name]) && (time() - $this->lastMessage[$name]) < $this->plugin->cooldownChat) return;
-        $this->lastMessage[$name] = time();
-        $points = $this->plugin->addPoints($player);
-        // debug
-        $player->sendMessage("Plus ".$points);
+        if(isset($this->lastMessage[$name]) && (time() - $this->lastMessage[$name][1]) < $this->plugin->cooldownChat) return;
+        if(isset($this->lastMessage[$name])) if($this->plugin->isCheckingLastMessage() && $message == $this->lastMessage[$name][0]) return;
+        $this->lastMessage[$name] = [$message, time()];
+        $this->plugin->addPoints($player);
     }
 }
