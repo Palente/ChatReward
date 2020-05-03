@@ -281,7 +281,6 @@ class ChatReward extends PluginBase
         $calculation = str_replace("{level}", $level, $calculation);
         if(preg_match('/(\d+)(?:\s*)([\+\-\*\/\^])(?:\s*)(\d+)/', $calculation, $matches)){
             if(!isset($matches[2], $matches[3])) return intval($calculation);
-            var_dump($matches);
             $operator = $matches[2];
             $weDoMaths = 0;
             switch($operator){

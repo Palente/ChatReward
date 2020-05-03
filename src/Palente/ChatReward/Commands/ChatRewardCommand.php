@@ -19,12 +19,12 @@
 namespace Palente\ChatReward\Commands;
 
 use Palente\ChatReward\ChatReward;
-use pocketmine\command\Command;
+use pocketmine\command\PluginCommand;
 use pocketmine\command\CommandSender;
 use pocketmine\Player;
 use pocketmine\utils\TextFormat;
 
-class ChatRewardCommand extends Command
+class ChatRewardCommand extends PluginCommand
 {
     /** @var ChatReward $plugin */
     private $plugin;
@@ -36,8 +36,10 @@ class ChatRewardCommand extends Command
     public function __construct(ChatReward $caller)
     {
         $this->plugin = $caller;
+        parent::__construct("chatreward", $caller);
         $this->setPermission("chatreward.command.chatreward");
-        parent::__construct("chatreward", "ChatReward Command", "/chatreward", ["cr"]);
+        $this->setAliases(["cr"]);
+        $this->setDescription("ChatReward Command");
     }
 
     /**

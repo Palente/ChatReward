@@ -15,4 +15,4 @@ I planned updates in futures.<br/>
 - [ ] Add the possibility to give items.
 - [ ] More customisable Level (possibility to announce the level up only in some cases).
 - [ ] Make it more clean.<br><br>
-_Don't be afraid by opening an issue or a pull request_
+_Don't be afraid by opening an issue, or a pull request_

@@ -2,7 +2,7 @@ name: ChatReward
 main: Palente\ChatReward\ChatReward
 api: [3.0.0]
 author: Palente
-version: 1.0.0
+version: 1.0.5
 description: "Get rewarded by talking!"
 website: https://github.com/Palente
 softdepend:
