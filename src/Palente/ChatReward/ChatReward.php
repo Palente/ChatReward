@@ -221,8 +221,8 @@ class ChatReward extends PluginBase
             if(($this->getPoints($player)+$xp) >= $xpToReach) return true;
             return false;
         }else{
-            if(isset($this->config->get("level_xp")["classic"])){
-                $xpToReach = $this->thisPluginIsAMathPlugin($level, $this->config->get("level_xp")["classic"]);
+            if(isset($this->config->get("level_xp")["default"])){
+                $xpToReach = $this->thisPluginIsAMathPlugin($level, $this->config->get("level_xp")["default"]);
                 if($xpToReach == 0) return true;
                 if(($this->getPoints($player)+$xp) >= $xpToReach)return true;
                 return false;
@@ -237,7 +237,7 @@ class ChatReward extends PluginBase
     private function reachedNextLevel(Player $player){
         $level = $this->getLevel($player)+1; #He reached a level so he reached the current level + 1
         if(isset($this->config->get("level_rewards")[$level])) $rewards = $this->config->get("level_rewards")[$level];
-        else $rewards = $this->config->get("level_rewards")["classic"];
+        else $rewards = $this->config->get("level_rewards")["default"];
         if(isset($rewards["money"])){
             $amount = $this->thisPluginIsAMathPlugin($level, $rewards["money"]);
             if ($amount != 0){

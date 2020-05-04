@@ -1,29 +1,33 @@
-version: 1.0.0
+version: 1.0.7
 blacklisted:
-  - "Playername"
-  #- "Palente"
+  - "PlayerName"
+#List of all blacklisted players...
 addons_enabled: []
+#addons_enabled: ["economyapi"]
+#Use this only if you have EconomyAPI!
+#addons_enabled: ["pureperms"]
+#Use this only if you have only PurePerms
 #addons_enabled: ["economyapi", "pureperms"]
-#economyapi - Plugin for economy: https://poggit.pmmp.io/p/EconomyAPI
-#pureperms - Plugin for rank: https://poggit.pmmp.io/p/PurePerms
-#Only Add them if you have these plugins!
+#Use this if you have these two plugins
 
 cooldown_message: 3
-#The time to wait before winning again xp by sending a message, (in seconds)
+#The time to wait before earning again xp by sending a message, (in seconds)
 mini_length_message: 4
-#The minimum length of the message to count as a real message and to give xp
+#The minimum length of the message to count as a real message and to give xp (to avoid spam)
 max_xp_per_message: 10
-#Maximum xp winned when sending a message
+# Maximum amount of XP earned by sending a message
 check_same_message: true
 #Check if the message sent is the same as before, prevent winning xp by spamming
 announce_level-up : true
+#if set to false, leveling up will not be announced in chat!
 announce_message: "§8[§9Chat§6Reward§8]§f {playername} reached the level {level}"
 #Please see tags at the end of this config
 level_xp:
-  0: 100
-  1: 200
-  #100: 50000
-  classic: "100 * {level}" #only the tags level work here. It's to do Maths.
+  0: 100 #xp needed to reach level 1
+  1: 200 #xp needed to reach level 2
+  #100: 50000 #xp needed to reach level 100
+  default: "100 * {level}" #only the tags level work here. (You can do some easy Maths)
+  #If the amount of xp needed is not set for a level it will use the default case
 level_rewards:
   1:
     message: "§8[§9Chat§6Reward§8]§f Congratulations, for reaching level 1!"
@@ -32,12 +36,12 @@ level_rewards:
     message: "§8[§9Chat§6Reward§8]§f {playername}, by reaching the level 2 you earned 1000 $"
   #100:
     #money: 10000
-    #rank: "owner" #This will give him the rank owner if the rank exist
-    #message: "§8[§9Chat§6Reward§8]§f {playername}, by reaching the level 100 you earned $100,000 and you became Owner"
-  classic:
-    money: 500
-    message: ""
-
+    #rank: "RankName" #This will give him the rank RankName if the rank exist!
+    #message: "§8[§9Chat§6Reward§8]§f {playername}, by reaching the level 100 you earned $100,000 and you got the rank RankName"
+  default:
+    #if a reward for a level is not set it will use the default case
+    money: "500 * {level}" #only the tags level work here. (You can do some easy Maths)
+    message: "§8[§9Chat§6Reward§8]§f {playername}, by reaching the level {level} and you earned some cash!"
 
 #TAGS
 # {level} represent the level of the player it's an integer.
