@@ -1,15 +1,16 @@
 # ChatReward
+[![](https://poggit.pmmp.io/shield.state/ChatReward)](https://poggit.pmmp.io/p/ChatReward) <br>
 _ChatReward is a free plugin working under PocketMine(PMMP)_<br>
 The plugin Reward Player who talk in your server!
-##Information:
+## Information:
 This plugin is working under the api 3.0.0 <br/>
-This plugin can depends on <a href="https://poggit.pmmp.io/p/PurePerms">PurePerms</a> and <a href="https://poggit.pmmp.io/p/EconomyAPI">EconomyAPI</a><br>
+This plugin can depend on <a href="https://poggit.pmmp.io/p/PurePerms">PurePerms</a> and <a href="https://poggit.pmmp.io/p/EconomyAPI">EconomyAPI</a><br>
 
-####I met Errors:
+#### I met Errors:
 Check the <a href="https://github.com/Palente/ChatReward/wiki/Errors">Wiki</a>!<br>
 If it didn't solve your problem, open an issue!
 
-##Future Updates:
+## Future Updates:
 I planned updates in futures.<br/>
 - [ ] Add more compatibility with others plugin.
 - [ ] Add the possibility to give items.

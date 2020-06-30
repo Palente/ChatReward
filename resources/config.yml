@@ -1,7 +1,4 @@
-version: 1.0.7
-blacklisted:
-  - "PlayerName"
-#List of all blacklisted players...
+version: 1.1.0
 addons_enabled: []
 #addons_enabled: ["economyapi"]
 #Use this only if you have EconomyAPI!
@@ -33,15 +30,15 @@ level_rewards:
     message: "§8[§9Chat§6Reward§8]§f Congratulations, for reaching level 1!"
   2:
     #money: 1000 #Only let this if you have the plugin EconomyAPI
-    message: "§8[§9Chat§6Reward§8]§f {playername}, by reaching the level 2 you earned 1000 $"
+    message: "§8[§9Chat§6Reward§8]§f {playername}, by reaching level 2 you earned 1000 $"
   #100:
     #money: 10000
-    #rank: "RankName" #This will give him the rank RankName if the rank exist!
-    #message: "§8[§9Chat§6Reward§8]§f {playername}, by reaching the level 100 you earned $100,000 and you got the rank RankName"
+    #rank: "RankName" #This will give him the rank RankName if the rank exists!
+    #message: "§8[§9Chat§6Reward§8]§f {playername}, by reaching level 100 you earned $100,000 and you got the rank RankName"
   default:
     #if a reward for a level is not set it will use the default case
     money: "500 * {level}" #only the tags level work here. (You can do some easy Maths)
-    message: "§8[§9Chat§6Reward§8]§f {playername}, by reaching the level {level} and you earned some cash!"
+    message: "§8[§9Chat§6Reward§8]§f {playername}, by reaching level {level} and you earned some cash!"
 
 #TAGS
 # {level} represent the level of the player it's an integer.

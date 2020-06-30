@@ -23,13 +23,12 @@ use pocketmine\Player;
 use pocketmine\plugin\PluginBase;
 use pocketmine\utils\Config;
 use pocketmine\utils\TextFormat;
+use SQLite3;
 
 class ChatReward extends PluginBase
 {
     /** @var Config $config */
     private $config;
-    /** @var Config $configPlayers Configuration of players */
-    private $configPlayers;
     /** @var string $prefix the Prefix of the plugin */
     public $prefix = TextFormat::DARK_GRAY."[".TextFormat::BLUE."Chat".TextFormat::GOLD."Reward".TextFormat::DARK_GRAY."] ".TextFormat::RESET;
     /** @var int $cooldownChat Cooldown in seconds */
@@ -43,6 +42,10 @@ class ChatReward extends PluginBase
     private $announceMessage;
     private $economyApi = null;
     private $purepermsApi = null;
+    /**
+     * @var DataBase $database
+     */
+    private $database;
     public function onLoad()
     {
         $this->getServer()->getCommandMap()->register("chatreward", new ChatRewardCommand($this));
@@ -57,7 +60,6 @@ class ChatReward extends PluginBase
         $this->cooldownChat = $this->config->get("cooldown_message",3);
         $this->minlenmess = $this->config->get("mini_length_messag",4);
         $this->max_xp_message = $this->config->get("max_xp_per_message",10);
-        $this->configPlayers = new Config($this->getDataFolder()."players.json", Config::JSON);
         $this->announceEnabled = $this->config->get("announce_level-up", true);
         $this->announceMessage = $this->config->get("announce_message", "§8[§9Chat§6Reward§8]§f {playername} reached the level {level}");
         $this->last_message_check = $this->config->get("check_same_message", true);
@@ -72,6 +74,7 @@ class ChatReward extends PluginBase
             else $this->getLogger()->error("You have enabled the usage of the plugin PurePerms but the plugin is not found.");
         }
         if($this->economyApi !== null && $this->purepermsApi !== null) $this->getLogger()->notice("The support of EconomyAPI and PurePerms is enabled!");
+        $this->database = new DataBase($this);
     }
 
     /*
@@ -82,7 +85,7 @@ class ChatReward extends PluginBase
      * @return array|null
      */
     public function getBlacklisted() : ?array{
-        return $this->config->get("blacklisted", null);
+        return $this->database->getBlacklisted();
     }
 
     /**
@@ -90,33 +93,21 @@ class ChatReward extends PluginBase
      * @return bool
      */
     public function isBlacklisted(string $name):bool{
-        $name = strtolower($name);
-        if(in_array($name, $this->getBlacklisted()))return true;
-        return false;
+        return $this->database->isBlacklisted($name);
     }
 
     /**
      * @param Player $player
      */
     public function addBlacklist(Player $player){
-        $name = strtolower($player->getName());
-        $blacklisted =  $this->getBlacklisted();
-        $blacklisted[] = $name;
-        $this->config->set("blacklisted", $blacklisted);
-        $this->config->save();
-        $this->config->reload();
+        $this->database->addBlacklist($player->getName());
     }
 
     /**
      * @param string $name
      */
     public function removeBlacklist(string $name){
-        $name = strtolower($name);
-        $blacklisted =  $this->getBlacklisted();
-        $blacklisted = array_merge(array_diff($blacklisted, array($name)));
-        $this->config->set("blacklisted", $blacklisted);
-        $this->config->save();
-        $this->config->reload();
+        $this->database->removeBlacklist($name);
     }
 
     /**
@@ -124,10 +115,7 @@ class ChatReward extends PluginBase
      * @param string $name
      */
     public function initData(string $name) {
-        $name = strtolower($name);
-        $this->configPlayers->set($name, ["level"=>0, "points"=>0]);
-        $this->configPlayers->save();
-        $this->configPlayers->reload();
+        $this->database->create($name);
     }
 
     /**
@@ -136,21 +124,19 @@ class ChatReward extends PluginBase
      * @return bool
      */
     public function existData(string $name) : bool{
-        return $this->configPlayers->exists($name, true);
+        return $this->database->exists($name);
     }
-    private function getData(string $name) : ?array{
-        $name = strtolower($name);
-        if(!$this->existData($name)) return null;
-        return $this->configPlayers->get($name);
-    }
-    private function setData(string $name, array $data){
-        $this->configPlayers->set(strtolower($name), $data);
-        $this->configPlayers->save();
-        $this->configPlayers->reload();
-    }
+
+    /**
+     * @param Player $player
+     * @return int
+     */
     public function getPoints(Player $player) : int{
-        $name = strtolower($player->getName());
-        return $this->getData($name)["points"];
+        return $this->database->getPoints($player->getName());
+    }
+
+    private function setPoints(Player $player, int $points){
+        $this->database->setPoints($player->getName(), $points);
     }
 
     /**
@@ -168,24 +154,14 @@ class ChatReward extends PluginBase
 
     /**
      * @param Player $player
-     * @param int $points
-     */
-    private function setPoints(Player $player, int $points){
-        $name = strtolower($player->getName());
-        if(!$this->existData($name)) $this->initData($name);
-        $data = $this->getData($name);
-        $data["points"] = $points;
-        $this->setData($name, $data);
-    }
-
-    /**
-     * @param Player $player
      * @return int|null
      */
     public function getLevel(Player $player):?int{
-        $name = strtolower($player->getName());
-        if(!$this->existData($name)) return null;
-        return $this->configPlayers->get($name)["level"];
+        return $this->database->getLevel($player->getName());
+    }
+
+    private function setLevel(Player $player, int $level){
+        $this->database->setLevel($player->getName(), $level);
     }
 
     /**
@@ -194,17 +170,6 @@ class ChatReward extends PluginBase
     public function addLevel(Player $player){
         $this->setLevel($player, $this->getLevel($player)+1);
         $this->setPoints($player, 0);
-    }
-    /**
-     * @param Player $player
-     * @param int $level
-     */
-    private function setLevel(Player $player, int $level){
-        $name = strtolower($player->getName());
-        if(!$this->existData($name)) $this->initData($name);
-        $data = $this->getData($name);
-        $data["level"] = $level;
-        $this->setData($name, $data);
     }
 
     /**
@@ -228,7 +193,7 @@ class ChatReward extends PluginBase
                 return false;
             }else{
                 //Couldn't check if he reached the good amount of xp to pass the next level
-                //if we avert the console, it will litteraly spaam the console.
+                //if we avert the console, it will literally spam the console.
                 return false;
             }
         }

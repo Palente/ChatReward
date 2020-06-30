@@ -39,7 +39,10 @@ class EventListener implements Listener
 
     public function onJoin(PlayerJoinEvent $event){
         $player = $event->getPlayer();
-        if(!$this->plugin->existData($player->getName())) $this->plugin->initData($player->getName());
+        if(!$this->plugin->existData($player->getName())) {
+            var_dump("DATA DOESNT EXIST");
+            $this->plugin->initData($player->getName());
+        }
     }
 
     public function onChat(PlayerChatEvent $event){
