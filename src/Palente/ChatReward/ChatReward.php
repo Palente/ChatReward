@@ -46,6 +46,7 @@ class ChatReward extends PluginBase
      * @var DataBase $database
      */
     private $database;
+
     public function onLoad()
     {
         $this->getServer()->getCommandMap()->register("chatreward", new ChatRewardCommand($this));
